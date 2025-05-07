@@ -8,4 +8,5 @@
 
 **Инструкции для работы.** 
 - [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
+- [Основные терминальные команды Docker](/docker/commands.md)
 
