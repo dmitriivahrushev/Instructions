@@ -1,6 +1,11 @@
-# instructions 
+# Data Engineer Knowledge Base 💾
 
-**Базы данных.**
+**Теоритический материал.**
  - [Нормальные формы](/DWH/NF.md)
  - [DWH по Инмону, Кимбалу, SCD, OLAP, OLTP](/DWH/dwh_theory.md)
  - [DWH Data Vault и Anchor Model](/DWH/dwh_data_vault_anchor_modeling.md)
+
+
+**Инструкции для работы.** 
+- [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
+
