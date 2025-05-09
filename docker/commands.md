@@ -21,6 +21,9 @@ docker rmi [OPTIONS] - Удаление образов Docker.
 ~~~
 docker rm [OPTIONS] - Удаление контейнеров Docker.
 ~~~
+~~~
+docker system df - Отображение информации о пространстве, занимаемом Docker-образами, контейнерами и объемами (volumes).
+~~~
 ---
 **Скачивание образов с docker hub**
 ~~~
