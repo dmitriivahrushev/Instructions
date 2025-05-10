@@ -70,4 +70,20 @@ docker stop $(docker ps -q)
 ~~~
 docker exec -it <container-id-or-name> bash
 ~~~
+---
+
+**Работа с логами.**  
+~~~
+> Перезаписать stdout в файл
+>> Добавить stdout в конец файла
+2> Перезаписать stderr в файл
+2>> Добавить stderr в конец файла
+~~~
+**Пример**
+~~~
+docker logs (id container) > stdout.log - Записать stdout в файл.
+~~~
+~~~
+docker logs (id container) 2> stderr.log - Записать stderr в файл.
+~~~
 
