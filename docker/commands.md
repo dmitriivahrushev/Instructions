@@ -106,5 +106,7 @@ docker network create --driver bridge my_bridge_network - Пример кома�
 ~~~
 docker run --name container1 --network my_bridge_network image_name - Затем можно подключить контейнеры к этой сети.
 ~~~
-
+~~~
+docker network connect <network-name> <container-id-or-name> - Присоединение к другим сетям Docker после того, как контейнер уже собран.
+~~~
 
