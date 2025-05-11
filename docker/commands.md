@@ -86,4 +86,22 @@ docker logs (id container) > stdout.log - Записать stdout в файл.
 ~~~
 docker logs (id container) 2> stderr.log - Записать stderr в файл.
 ~~~
+---
+
+**Docker Network** 
++ Bridge Network (Используется по умолчанию при запуске контейнера).
++ None Network 
++ Host Network
+~~~
+docker run --network="ИМЯ сети" имя-образа
+~~~
+
+**Помимо встроенных типов сетей («bridge», «none» и «host»), Docker позволяет создавать собственные (кастомные) сети.** 
+~~~
+docker network create --driver bridge my_bridge_network - Пример команды для создания custom bridge сети.
+~~~
+~~~
+docker run --name container1 --network my_bridge_network image_name - Затем можно подключить контейнеры к этой сети.
+~~~
+
 
