@@ -1,5 +1,5 @@
 # Data Engineer Knowledge Base 💾
-
+![avatar](/image/avatar.png)
 **Теоритический материал.**
  - [Нормальные формы](/DWH/NF.md)
  - [DWH по Инмону, Кимбалу, SCD, OLAP, OLTP](/DWH/dwh_theory.md)
