@@ -11,4 +11,4 @@
 - [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
 - [Основные терминальные команды Docker](/docker/commands.md)
 - [Airflow - PostgresOperator](/airflow/postgres_operator.md)
-
+- [Привязка GitHub](/GitHub/ssh-keygen.md)
