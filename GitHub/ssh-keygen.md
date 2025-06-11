@@ -8,7 +8,7 @@ https://git-scm.com
 ~~~
 ssh-key ssh-keygen -t ed25519
 ~~~
-Если все хорошо видим такой вывод  
+#### Если все хорошо видим такой вывод:  
 Generating public/private ed25519 key pair.  
 Enter file in which to save the key (C:\Users\ПК48/.ssh/id_ed25519):  
 Enter passphrase (empty for no passphrase):  
@@ -30,7 +30,7 @@ The key's randomart image is:
 | o+=+. o  +.   o=|  
 +----[SHA256]-----+  
 
-3. Заходим в папку хранения ssh. Примерное расположение PS C:\Users\user\.ssh и выводим содержание файла с публичным SSH-клюём  
+3. Заходим в папку хранения ssh. Примерное расположение PS C:\Users\user\.ssh и выводим содержимое файла с публичным SSH-ключём  
 ~~~
 cat .\id_ed25519.pub
 ~~~
@@ -51,5 +51,6 @@ cat .\id_ed25519.pub
 ~~~
 ssh -T git@github.com
 ~~~
+
 Успешный результат:  
 `Hi! You've successfully authenticated, but GitHub does not provide shell access.`
