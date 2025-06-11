@@ -6,7 +6,7 @@ https://git-scm.com
 
 2. Сгенерировать ssh-key в PowerShell от имени администратора
 ~~~
-ssh-key ssh-keygen -t ed25519
+ssh-keygen -t ed25519
 ~~~
 #### Если все хорошо видим такой вывод:  
 Generating public/private ed25519 key pair.  
