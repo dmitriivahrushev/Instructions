@@ -6,6 +6,7 @@
  - [DWH Data Vault и Anchor Model](/DWH/dwh_data_vault_anchor_modeling.md)
  - [Витрины данных](/datamart/data_mart.md)
  - [VIEW](/datamart/view.md)
+ - [ETL Пайплайн](/ETL/etl.md)
 
 **Инструкции для работы.** 
 - [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
