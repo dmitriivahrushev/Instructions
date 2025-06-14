@@ -7,6 +7,7 @@
  - [Витрины данных](/datamart/data_mart.md)
  - [VIEW](/datamart/view.md)
  - [ETL Пайплайн](/ETL/etl.md)
+ - [ACID](/ACID/ACID.md)
 
 **Инструкции для работы.** 
 - [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
