@@ -9,12 +9,13 @@
  - [ETL Пайплайн](/ETL/etl.md)
  - [ACID](/ACID/ACID.md)
  - [Airflow](/airflow_theory/airflow.md)
+
 **Инструкции для работы.** 
-- `Visual Studio Code`
+- `Visual Studio Code`  
 [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
-- `Docker`
+- `Docker`  
 [Основные терминальные команды Docker](/docker/commands.md)
-- `Airflow`
+- `Airflow`  
 [Airflow - PostgresOperator](/airflow/postgres_operator.md)
-- `GitHub`
+- `GitHub`  
 [Привязка GitHub](/GitHub/ssh-keygen.md)
