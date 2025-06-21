@@ -8,9 +8,13 @@
  - [VIEW](/datamart/view.md)
  - [ETL Пайплайн](/ETL/etl.md)
  - [ACID](/ACID/ACID.md)
-
+ - [Airflow](/airflow_theory/airflow.md)
 **Инструкции для работы.** 
-- [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
-- [Основные терминальные команды Docker](/docker/commands.md)
-- [Airflow - PostgresOperator](/airflow/postgres_operator.md)
-- [Привязка GitHub](/GitHub/ssh-keygen.md)
+- `Visual Studio Code`
+[Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
+- `Docker`
+[Основные терминальные команды Docker](/docker/commands.md)
+- `Airflow`
+[Airflow - PostgresOperator](/airflow/postgres_operator.md)
+- `GitHub`
+[Привязка GitHub](/GitHub/ssh-keygen.md)
