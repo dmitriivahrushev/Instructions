@@ -19,5 +19,5 @@
 [Airflow - PostgresOperator](/airflow/postgres_operator.md)
 - `GitHub`  
 [Привязка GitHub](/GitHub/ssh-keygen.md)
-- `PostgreSQL`
+- `PostgreSQL`  
 [Encoding Error](/Postgres/encoding_error.md)
