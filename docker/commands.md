@@ -76,6 +76,11 @@ docker exec -it <container-id-or-name> bash
 ---
 
 **Работа с логами.**  
+Просмотр логов:  
+~~~
+docker logs <CONTAINER ID>
+~~~
+
 ~~~
 > Перезаписать stdout в файл
 >> Добавить stdout в конец файла
