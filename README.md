@@ -13,6 +13,7 @@
 **Инструкции для работы.** 
 - `Visual Studio Code`  
 [Запуск **pytest** в режиме **debug** - Visual Studio Code](/VScode/debug_pytest.md)
+[Fix подсветки импортов](/VScode/fix_import.md)
 - `Docker`  
 [Основные терминальные команды Docker](/docker/commands.md)
 - `Airflow`  
