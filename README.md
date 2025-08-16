@@ -23,4 +23,4 @@
 - `PostgreSQL`  
 [Encoding Error](/Postgres/encoding_error.md)
 - `Python`  
-[PGConnect](/Python/pg_conn/)
+[PGConnector](/Python/pg_conn/)
