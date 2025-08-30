@@ -44,7 +44,7 @@ class PosgresManager:
             return True
         except Exception as e:
             logging.error(f'Ошибка подключения к Базе данных!\n{e}')
-            return False
+            raise
 
     @contextmanager
     def get_cursor(self):
