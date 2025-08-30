@@ -1,0 +1,175 @@
+1. Проверить архитектуру ОС:
+uname -m
+--------------------------------
+Если x86_64 — нужен amd64 пакет.
+Если aarch64 — нужен arm64 пакет.
+--------------------------------
+Скачиваем на 10.250.129.246 
+wget https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/3.1.0/opensearch-dashboards-3.1.0-linux-x64.deb
+
+2. ЗДЕСЬ БУДЕТ ТО КАК СДЕЛАТЬ СНАП ШОТ???
+--------------------------------
+Последовательность обновления:
+- Обновляем все дата ноды по 1 шт.
+- Обновляем координатор.
+- Обновляем мастер.
+Новые версии совместимы с предыдущими только на уровне дата-нод, 
+но мастер-нода всегда должна быть обновлена после остальных, 
+чтобы избежать проблем с управлением кластером.
+--------------------------------
+
+3. Перед началом работы проверить работоспособность кластера OpenSearch. 
+GET http://localhost:9200/_cluster/health?pretty
+Ответ должен выглядеть примерно так, как показано в следующем примере:
+{
+    "cluster_name":"opensearch-dev-cluster",
+    "status":"green",
+    "timed_out":false,
+    "number_of_nodes":4,
+    "number_of_data_nodes":4,
+    "active_primary_shards":1,
+    "active_shards":4,
+    "relocating_shards":0,
+    "initializing_shards":0,
+    "unassigned_shards":0,
+    "delayed_unassigned_shards":0,
+    "number_of_pending_tasks":0,
+    "number_of_in_flight_fetch":0,
+    "task_max_waiting_in_queue_millis":0,
+    "active_shards_percent_as_number":100.0
+}
+
+4. Отключить репликацию шардов, чтобы предотвратить создание реплик шардов во время отключения узлов. 
+PUT http://localhost:9200/_cluster/settings?pretty
+{
+    "persistent": {
+        "cluster.routing.allocation.enable": "primaries"
+    }
+}
+Ответ должен выглядеть примерно так, как показано в следующем примере:
+{
+  "acknowledged" : true,
+  "persistent" : {
+    "cluster" : {
+      "routing" : {
+        "allocation" : {
+          "enable" : "primaries"
+        }
+      }
+    }
+  },
+  "transient" : { }
+}
+
+5. Выполнить операцию очистки кластера, чтобы зафиксировать записи журнала транзакций в индексе Lucene:
+POST http://localhost:9200/_flush?pretty
+Ответ должен выглядеть примерно так, как показано в следующем примере:
+{
+  "_shards" : {
+    "total" : 4,
+    "successful" : 4,
+    "failed" : 0
+  }
+}
+
+6. Выбираем узел для обновления:
+GET http://localhost:9200/_cat/nodes?v&h=name,version,node.role,master | column -t
+
+7. Останавливаем обновляемый узел:
+Сохраняем opensearch/config и opensearch-dashboards/config
+А так же файл jvm.options т.к его содержимое придется менять иначе OpenSearch не стартанет.
+sudo systemctl stop opensearch
+
+8. Проверяем, что узел был исключен из кластера:
+GET http://localhost:9200/_cat/nodes?v&h=name,version,node.role,master | column -t
+
+9. Установка новой версии:
+sudo dpkg -i opensearch-3.1.0-amd64.deb
+В момент установки высветится сообщение о том что нужно ли менять конфиги на новые нажимаем N!
+Далее ищем файл jvm.options.dpkg-dist(Файл который проигнорили при установке) копируем его содержимое и вставляем в jvm.options. 
+Запуск ноды с новой версией
+sudo systemctl start opensearch
+sudo systemctl status opensearch
+
+10. Проверяем присоединение к кластеру:
+GET http://localhost:9200/_cat/nodes?v&h=name,version,node.role,master" | column -t
+
+11. Проверяем что весрия изменилась:
+curl -s "http://localhost:9200/_nodes/node-1?pretty=true" | jq -r '.nodes | .[] | "\(.name) v\(.version)"'
+
+12. Включение репликации шардов:
+На новой версии настройка репликации шардов перенесена в архив.
+
+Проверяем архив.
+curl -s http://localhost:9200/_cluster/settings?pretty | jq '.persistent.archived'
+
+Удаляем устаревшую настройку.
+PUT http://localhost:9200/_cluster/settings
+{
+  "persistent": {
+    "archived.plugins.index_state_management.template_migration.control": null
+  }
+}
+
+Проверка что настройка удалена.
+curl -s http://localhost:9200/_cluster/settings?pretty | jq '.persistent.archived'
+
+Включаем репликацию шардов:
+PUT http://172.17.0.2:9200/_cluster/settings?pretty
+{
+    "persistent": {
+        "cluster.routing.allocation.enable": "all"
+    }
+}
+Ответ должен выглядеть примерно так, как показано в следующем примере:
+{
+  "acknowledged" : true,
+  "persistent" : {
+    "cluster" : {
+      "routing" : {
+        "allocation" : {
+          "enable" : "all"
+        }
+      }
+    }
+  },
+  "transient" : { }
+}
+
+11. Првоеряем, что кластер исправен:
+GET http://172.17.0.2:9200/_cluster/health?pretty
+Ответ должен выглядеть примерно так, как показано в следующем примере:
+{
+  "cluster_name" : "opensearch-dev-cluster",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 4,
+  "number_of_data_nodes" : 4,
+  "discovered_master" : true,
+  "active_primary_shards" : 1,
+  "active_shards" : 4,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
+
+
+Заметки:
+mkdir {10_250_29_66_master,10_250_29_65_crd,10_250_29_67_data,10_250_29_68_data,10_250_29_69_data,10_250_29_70_data,10_250_29_71_data,10_250_29_72_data,10_250_29_73_data,10_250_29_74_data}
+sudo journalctl -u opensearch -n 50 --no-pager - Проверка логов.
+sudo find / -name "jvm.options*" 2>/dev/null - Быстро найти файл.
+scp -r /etc/opensearch/config user@10.250.129.246:/mnt/transfer
+
+
+Проблемы с чем столкнулся:
+После установки обновления с 2.8.0 на 3.1.0 opensearch падал с ошибкой:
+Caused by: java.lang.ClassNotFoundException: org.opensearch.javaagent.bootstrap.AgentPolicy$>
+Как оказалось если при установке игнорить Дефолтные конфиги, то получается такая ситуация.
+Как исправил взял файл jvm.options.dpkg-dist(Файл который проигнорили при установке) и скопировал его содержимое
+в jvm.options и все полетело. Если на каждом калстере развернут отдельный Opensearch, то можно заготовить папки
+для сохранения конфигов под каждую ноду(На всякий случай), а в процессе обновления копировать их на 10.250.129.246.

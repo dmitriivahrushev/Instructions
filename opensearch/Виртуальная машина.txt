@@ -1,0 +1,48 @@
+ssh -p 2222 admin@127.0.0.1
+
+Локальный тест.
+docker build -t test_update:20.04 .
+
+docker run -dit \
+--name my_container \
+-p 9200:9200 \
+-p 9600:9600 \
+-v opensearch_data:/usr/share/opensearch/data \
+test_update:20.04 \
+bash
+
+
+apt-get update
+apt-get install -y wget curl tar openjdk-17-jdk
+
+
+Скачиваем
+wget https://artifacts.opensearch.org/releases/bundle/opensearch/2.8.0/opensearch-2.8.0-linux-x64.tar.gz -P /tmp
+
+
+Копируем в контейнер
+docker cp 'C:\Users\w3bfr\OneDrive\Рабочий стол\Dev\test_update_os\opensearch-2.8.0-linux-x64.tar.gz' db9fba332513:/tmp
+
+
+Распаковка
+tar -xzf /tmp/opensearch-2.8.0-linux-x64.tar.gz -C /usr/share/opensearch
+
+
+cd /usr/share/opensearch/opensearch-2.8.0
+useradd -d /usr/share/opensearch/opensearch-2.8.0 opensearch
+chown -R opensearch:opensearch /usr/share/opensearch/opensearch-2.8.0
+export PATH=$PATH:/usr/share/opensearch/opensearch-2.8.0/bin
+
+
+
+Config
+cluster.name: test-cluster
+node.name: node-1
+network.host: 0.0.0.0
+http.port: 9200
+discovery.type: single-node
+plugins.security.disabled: true
+
+su - opensearch
+
+bin/opensearch

@@ -24,3 +24,5 @@
 [Encoding Error](/Postgres/encoding_error.md)
 - `Python`  
 [PGConnector](/Python/pg_conn/)
+- `OpenSearch`  
+[UpdateOpensearch](/opensearch/update_opensearch.md)
