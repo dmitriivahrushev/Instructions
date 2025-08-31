@@ -1,13 +1,72 @@
-1. Проверить архитектуру ОС:
+Проблемы с чем столкнулся:
+Поднял Oracle VirtualBox на нее установил ubuntu такую же как и на нодах кластера. Затем установил Openseaarch 2.8.0.
+После установки обновления с 2.8.0 на 3.1.0 opensearch падал с ошибкой:
+Caused by: java.lang.ClassNotFoundException: org.opensearch.javaagent.bootstrap.AgentPolicy$>
+Как оказалось если при установке игнорить Дефолтные конфиги, то при запуске не будет хватать ClassNotFoundException.
+Как исправил: взял файл jvm.options.dpkg-dist(Файл который проигнорили при установке) и скопировал его содержимое
+в jvm.options и все полетело. Если на каждом узле развернут отдельный Opensearch, то можно заготовить папки
+для сохранения конфигов под каждую ноду(На всякий случай), а в процессе обновления копировать их на 10.250.129.246.
+
+Основные вопросы на подумать:
+Можно ли при установке новой версии заменить файл jvm.options сразу, еслить ли там какие то кастомные насройки именно для нашей системы.
+На какую машину будем монитровать каталоги. 
+
+
+Заметки:
+Скопировать конфиги в локальный файл https://localhost/_cluster/settings?include_defaults=true&pretty
+mkdir {10_250_29_66_master,10_250_29_65_crd,10_250_29_67_data,10_250_29_68_data,10_250_29_69_data,10_250_29_70_data,10_250_29_71_data,10_250_29_72_data,10_250_29_73_data,10_250_29_74_data}
+sudo journalctl -u opensearch -n 50 --no-pager - Проверка логов.
+sudo find / -name "jvm.options*" 2>/dev/null - Быстро найти файл.
+scp -r /etc/opensearch user@10.250.129.246:/mnt/transfer
+Если используем nfs-kernel-server на машине где будет снап шот, на каждую ноду кластера нужно монтировать каталог и в yml добвляем path.repo: ["/mnt/snapshots"] после чего можно делать снап шот с координатора.
+
+Тестировал на локальной виртуальной машине.
+1. Проверяем архитектуру ОС:
 uname -m
 --------------------------------
-Если x86_64 — нужен amd64 пакет.
+Если x86_64 — нужен amd64 пакет. 
 Если aarch64 — нужен arm64 пакет.
 --------------------------------
-Скачиваем на 10.250.129.246 
-wget https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/3.1.0/opensearch-dashboards-3.1.0-linux-x64.deb
+Скачиваем:
+wget https://artifacts.opensearch.org/releases/bundle/opensearch/3.1.0/opensearch-3.1.0-linux-x64.deb
 
-2. ЗДЕСЬ БУДЕТ ТО КАК СДЕЛАТЬ СНАП ШОТ???
+
+2. Создаем snapshot:
+- Чтобы использовать общую файловую систему в качестве репозитория снимков, добавляем ее в opensearch.yml:
+sudo mkdir -p /mnt/snapshots
+sudo chown -R opensearch:opensearch /mnt/snapshots
+ls -ld /mnt/snapshots
+В opensearch.yml Добавляем - path.repo: ["/mnt/snapshots"]
+Перезапуск службы:
+sudo systemctl restart opensearch
+sudo systemctl status opensearch
+
+- Регистрация репозитория
+PUT http://localhost:9200/_snapshot/my_repo
+{
+  "type": "fs",
+  "settings": {
+    "location": "/mnt/snapshots"
+  }
+}
+Ответ должен выглядеть примерно так, как показано в следующем примере:
+{
+    "acknowledged": true
+}
+
+- Сделать snapshot
+PUT http://localhost:9200/_snapshot/my_repo/snapshot_1?wait_for_completion=true
+my_repo — имя репозитория 
+snapshot_1 — имя снапшота
+wait_for_completion=true — ждём завершения (иначе он создаётся асинхронно)
+Проверить, что снапшот создан:
+GET http://localhost:9200/_snapshot/my_repo/snapshot_1
+
+Восстановление если требуется!
+- Восстановление из snapshot 
+POST http://localhost:9200/_snapshot/my_repo/snapshot_1/_restore
+
+
 --------------------------------
 Последовательность обновления:
 - Обновляем все дата ноды по 1 шт.
@@ -17,6 +76,7 @@ wget https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/3.1.
 но мастер-нода всегда должна быть обновлена после остальных, 
 чтобы избежать проблем с управлением кластером.
 --------------------------------
+
 
 3. Перед началом работы проверить работоспособность кластера OpenSearch. 
 GET http://localhost:9200/_cluster/health?pretty
@@ -38,6 +98,7 @@ GET http://localhost:9200/_cluster/health?pretty
     "task_max_waiting_in_queue_millis":0,
     "active_shards_percent_as_number":100.0
 }
+
 
 4. Отключить репликацию шардов, чтобы предотвратить создание реплик шардов во время отключения узлов. 
 PUT http://localhost:9200/_cluster/settings?pretty
@@ -61,6 +122,7 @@ PUT http://localhost:9200/_cluster/settings?pretty
   "transient" : { }
 }
 
+
 5. Выполнить операцию очистки кластера, чтобы зафиксировать записи журнала транзакций в индексе Lucene:
 POST http://localhost:9200/_flush?pretty
 Ответ должен выглядеть примерно так, как показано в следующем примере:
@@ -72,36 +134,57 @@ POST http://localhost:9200/_flush?pretty
   }
 }
 
+
 6. Выбираем узел для обновления:
 GET http://localhost:9200/_cat/nodes?v&h=name,version,node.role,master | column -t
 
+
 7. Останавливаем обновляемый узел:
+Сохранаяем текущие настройки кластера - http://localhost:9200/_cluster/settings?include_defaults=true&pretty
 Сохраняем opensearch/config и opensearch-dashboards/config
-А так же файл jvm.options т.к его содержимое придется менять иначе OpenSearch не стартанет.
+Конфиги и сертификаты:
+/etc/opensearch — копируем всю папку:
+opensearch.yml
+jvm.options
+log4j2.properties
+opensearch.keystore
+Сертификаты .pem
+Настройки плагинов (opensearch-security/, opensearch-observability/)
+Обязательно файл jvm.options т.к его содержимое придется менять иначе OpenSearch не стартанет.
 sudo systemctl stop opensearch
+
 
 8. Проверяем, что узел был исключен из кластера:
 GET http://localhost:9200/_cat/nodes?v&h=name,version,node.role,master | column -t
 
+
 9. Установка новой версии:
 sudo dpkg -i opensearch-3.1.0-amd64.deb
-В момент установки высветится сообщение о том что нужно ли менять конфиги на новые нажимаем N!
-Далее ищем файл jvm.options.dpkg-dist(Файл который проигнорили при установке) копируем его содержимое и вставляем в jvm.options. 
+В момент установки высветится сообщение о том что нужно ли менять конфиги
+Configuration file '/etc/opensearch/jvm.options' Y
+Configuration file '/etc/opensearch/opensearch.yml' N
+Если не стартанет ищем файл jvm.options.dpkg-dist(Файл который проигнорили при установке) копируем его содержимое и вставляем в jvm.options. 
 Запуск ноды с новой версией
 sudo systemctl start opensearch
 sudo systemctl status opensearch
 
+
 10. Проверяем присоединение к кластеру:
 GET http://localhost:9200/_cat/nodes?v&h=name,version,node.role,master" | column -t
 
-11. Проверяем что весрия изменилась:
+
+11. Проверяем что версия изменилась:
 curl -s "http://localhost:9200/_nodes/node-1?pretty=true" | jq -r '.nodes | .[] | "\(.name) v\(.version)"'
 
+
 12. Включение репликации шардов:
-На новой версии настройка репликации шардов перенесена в архив.
+На новой версии настройка plugins.index_state_management.template_migration.control перенесена в архив.
+В прошлой версии OpenSearch этот параметр использовался для управления миграцией шаблонов ISM (Index State Management).
+
 
 Проверяем архив.
 curl -s http://localhost:9200/_cluster/settings?pretty | jq '.persistent.archived'
+
 
 Удаляем устаревшую настройку.
 PUT http://localhost:9200/_cluster/settings
@@ -111,8 +194,10 @@ PUT http://localhost:9200/_cluster/settings
   }
 }
 
+
 Проверка что настройка удалена.
 curl -s http://localhost:9200/_cluster/settings?pretty | jq '.persistent.archived'
+
 
 Включаем репликацию шардов:
 PUT http://172.17.0.2:9200/_cluster/settings?pretty
@@ -136,6 +221,7 @@ PUT http://172.17.0.2:9200/_cluster/settings?pretty
   "transient" : { }
 }
 
+
 11. Првоеряем, что кластер исправен:
 GET http://172.17.0.2:9200/_cluster/health?pretty
 Ответ должен выглядеть примерно так, как показано в следующем примере:
@@ -157,19 +243,3 @@ GET http://172.17.0.2:9200/_cluster/health?pretty
   "task_max_waiting_in_queue_millis" : 0,
   "active_shards_percent_as_number" : 100.0
 }
-
-
-Заметки:
-mkdir {10_250_29_66_master,10_250_29_65_crd,10_250_29_67_data,10_250_29_68_data,10_250_29_69_data,10_250_29_70_data,10_250_29_71_data,10_250_29_72_data,10_250_29_73_data,10_250_29_74_data}
-sudo journalctl -u opensearch -n 50 --no-pager - Проверка логов.
-sudo find / -name "jvm.options*" 2>/dev/null - Быстро найти файл.
-scp -r /etc/opensearch/config user@10.250.129.246:/mnt/transfer
-
-
-Проблемы с чем столкнулся:
-После установки обновления с 2.8.0 на 3.1.0 opensearch падал с ошибкой:
-Caused by: java.lang.ClassNotFoundException: org.opensearch.javaagent.bootstrap.AgentPolicy$>
-Как оказалось если при установке игнорить Дефолтные конфиги, то получается такая ситуация.
-Как исправил взял файл jvm.options.dpkg-dist(Файл который проигнорили при установке) и скопировал его содержимое
-в jvm.options и все полетело. Если на каждом калстере развернут отдельный Opensearch, то можно заготовить папки
-для сохранения конфигов под каждую ноду(На всякий случай), а в процессе обновления копировать их на 10.250.129.246.

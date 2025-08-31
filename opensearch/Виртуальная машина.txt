@@ -1,17 +1,5 @@
 ssh -p 2222 admin@127.0.0.1
 
-Локальный тест.
-docker build -t test_update:20.04 .
-
-docker run -dit \
---name my_container \
--p 9200:9200 \
--p 9600:9600 \
--v opensearch_data:/usr/share/opensearch/data \
-test_update:20.04 \
-bash
-
-
 apt-get update
 apt-get install -y wget curl tar openjdk-17-jdk
 
